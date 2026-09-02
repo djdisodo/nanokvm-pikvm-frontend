@@ -146,6 +146,15 @@ export function Nanokvm() {
 	};
 
 	const renderDevices = function(target, devices, create) {
+		const values = new Map();
+		for (const row of target.querySelectorAll(".nanokvm-device")) {
+			const input = row.querySelector("input");
+			if (input) values.set(row.dataset.clientId, input.value);
+		}
+		const focusedRow = document.activeElement?.closest?.(".nanokvm-device");
+		const focusedClientId = focusedRow?.dataset.clientId;
+		const selectionStart = document.activeElement?.selectionStart;
+		const selectionEnd = document.activeElement?.selectionEnd;
 		target.replaceChildren();
 		if (devices.length === 0) {
 			const empty = document.createElement("div");
@@ -154,7 +163,18 @@ export function Nanokvm() {
 			target.append(empty);
 			return;
 		}
-		for (const device of devices) target.append(create(device));
+		for (const device of devices) {
+			const row = create(device);
+			const input = row.querySelector("input");
+			if (input && values.has(device.client_id)) input.value = values.get(device.client_id);
+			target.append(row);
+			if (input && device.client_id === focusedClientId) {
+				input.focus();
+				if (selectionStart !== undefined && selectionEnd !== undefined) {
+					input.setSelectionRange(selectionStart, selectionEnd);
+				}
+			}
+		}
 	};
 
 	const loadDevices = async function() {
